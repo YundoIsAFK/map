@@ -108,7 +108,7 @@ window.onload = () => {
     return new TextDecoder().decode(bytes);
   };
 
-  // ===== DOM =====
+  
   const gridEl = document.getElementById('grid');
   const widthEl = document.getElementById('width');
   const heightEl = document.getElementById('height');
@@ -143,7 +143,7 @@ window.onload = () => {
   const modalPrimary = document.getElementById('modal-primary');
   const modalSecondary = document.getElementById('modal-secondary');
 
-  // ===== State =====
+  
   let selectedTheme = localStorage.getItem('theme') || 'grass';
   let activeTiles = getActiveTiles(selectedTheme);
   if (!activeTiles.length) {
@@ -171,17 +171,17 @@ window.onload = () => {
 
   const counters = { buildable: 0, points: 0 };
 
-  // Undo/Redo stacks: each entry is { before: {cell:idx}, after: {cell:idx} }
+  
   const undoStack = [];
   const redoStack = [];
   const MAX_HISTORY = 200;
 
-  let strokeBefore = null; // Map cell -> previous idx (captured once per stroke)
-  let strokeAfter = null;  // Map cell -> new idx
+  let strokeBefore = null; 
+  let strokeAfter = null;  
   let isPainting = false;
   let lastCell = null;
 
-  // ===== UI helpers =====
+  
   const updateUndoRedoUI = () => {
     if (undoBtn) undoBtn.disabled = undoStack.length === 0;
     if (redoBtn) redoBtn.disabled = redoStack.length === 0;
@@ -517,7 +517,7 @@ window.onload = () => {
     updateUndoRedoUI();
   };
 
-  // ===== Export / Import =====
+  
   const buildExportPayload = () => {
     const applyThemeToMap = changeThemeEl ? !!changeThemeEl.checked : true;
     const wLive = normalizeWidth(widthEl?.value || localStorage.getItem('width') || 'AO');
@@ -535,7 +535,7 @@ window.onload = () => {
   };
 
   const buildCompressedCode = () => {
-    // compact keys for smaller string
+    
     const payload = buildExportPayload();
     const compact = {
       v: payload.v,
@@ -571,7 +571,7 @@ window.onload = () => {
       };
     }
 
-    // otherwise JSON
+    
     return JSON.parse(trimmed);
   };
 
@@ -590,14 +590,14 @@ window.onload = () => {
     if (obj.selectedTile !== undefined) localStorage.setItem('selectedTile', String(obj.selectedTile));
     if (obj.applyThemeToMap !== undefined) localStorage.setItem('change-theme', String(!!obj.applyThemeToMap));
 
-    // replace current map
+    
     for (const k of Object.keys(gridColors)) delete gridColors[k];
     for (const k of Object.keys(obj.gridColors)) gridColors[k] = obj.gridColors[k];
 
     return true;
   };
 
-  // ===== Export PNG =====
+  
   const exportPNG = async () => {
   try {
     const grid = document.getElementById('grid');
@@ -606,10 +606,10 @@ window.onload = () => {
     const hexes = Array.from(grid.querySelectorAll('.hexagon'));
     if (!hexes.length) return;
 
-    // Use real rendered size
+    
     const gridRect = grid.getBoundingClientRect();
 
-    // Some browsers report fractional sizes; add padding.
+    
     const padding = 20;
     const canvas = document.createElement('canvas');
     canvas.width = Math.ceil(grid.scrollWidth + padding * 2);
@@ -618,11 +618,11 @@ window.onload = () => {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Background
+    
     ctx.fillStyle = '#282828';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Cache loaded images
+    
     const imgCache = new Map();
     const loadImage = (src) =>
       new Promise((resolve) => {
@@ -638,14 +638,14 @@ window.onload = () => {
         img.src = src;
       });
 
-    // Helper: extract url("...") from computed style
+    
     const extractUrl = (bg) => {
       if (!bg || bg === 'none') return null;
       const m = bg.match(/url\(["']?(.*?)["']?\)/i);
       return m ? m[1] : null;
     };
 
-    // Hex polygon fallback (rough but fine)
+    
     const drawHexFallback = (x, y, w, h, color) => {
       const cx = x + w / 2;
       const cy = y + h / 2;
@@ -664,14 +664,14 @@ window.onload = () => {
       ctx.fill();
     };
 
-    // Draw in DOM order (good enough)
+    
     for (const hex of hexes) {
       const cell = hex.dataset.cell;
       if (!cell) continue;
 
       const r = hex.getBoundingClientRect();
 
-      // Position relative to grid
+      
       const x = Math.round((r.left - gridRect.left) + padding + grid.scrollLeft);
       const y = Math.round((r.top - gridRect.top) + padding + grid.scrollTop);
       const w = Math.round(r.width);
@@ -688,7 +688,7 @@ window.onload = () => {
         }
       }
 
-      // If no image (or failed load), use tile color from your data
+      
       const idx = clampIndex(gridColors[cell], activeTiles.length);
       const tile = activeTiles[idx];
       drawHexFallback(x, y, w, h, tile?.color || '#444');
@@ -717,7 +717,7 @@ window.onload = () => {
   }
 };
 
-  // ===== Modal =====
+  
   let modalMode = 'export-json';
 
   const openModal = (mode) => {
@@ -757,7 +757,7 @@ window.onload = () => {
     modal.classList.remove('open');
   };
 
-  // ===== Theme change =====
+  
   const changeTheme = (nextTheme) => {
     selectedTheme = nextTheme;
     localStorage.setItem('theme', selectedTheme);
@@ -792,7 +792,7 @@ window.onload = () => {
 
     if (centerEl) centerEl.textContent = findCenter(endWidth, endHeight);
 
-    // size change invalidates history
+    
     undoStack.length = 0;
     redoStack.length = 0;
     updateUndoRedoUI();
@@ -800,7 +800,7 @@ window.onload = () => {
     rebuildGridDOM();
   };
 
-  // ===== Init =====
+  
   if (widthEl) widthEl.value = localWidth;
   if (heightEl) heightEl.value = String(localHeight);
 
@@ -818,7 +818,7 @@ window.onload = () => {
 
   updateUndoRedoUI();
 
-  // ===== Painting events =====
+  
   const getCellFromEvent = (e) => {
     const hex = e.target.closest?.('.hexagon');
     if (!hex || !hex.dataset || !hex.dataset.cell) return null;
@@ -863,7 +863,7 @@ window.onload = () => {
     gridEl.addEventListener('pointercancel', endStroke);
   }
 
-  // ===== Keyboard shortcuts =====
+  
   document.addEventListener('keydown', (e) => {
     const isMac = navigator.platform.toUpperCase().includes('MAC');
     const ctrl = isMac ? e.metaKey : e.ctrlKey;
@@ -879,7 +879,7 @@ window.onload = () => {
     }
   });
 
-  // ===== UI bindings =====
+  
   if (undoBtn) undoBtn.addEventListener('click', undo);
   if (redoBtn) redoBtn.addEventListener('click', redo);
 
@@ -974,7 +974,7 @@ window.onload = () => {
           return;
         }
 
-        // Apply imported UI state live
+        
         const w = normalizeWidth(localStorage.getItem('width') || 'C');
         const h = normalizeHeight(localStorage.getItem('height') || 3);
 
@@ -1010,7 +1010,7 @@ window.onload = () => {
         return;
       }
 
-      // Export copy
+      
       try {
         await navigator.clipboard.writeText(modalText.value);
         if (modalHint) modalHint.textContent = 'Copied.';
@@ -1022,4 +1022,5 @@ window.onload = () => {
       }
     });
   }
+
 };
