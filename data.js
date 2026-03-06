@@ -1,8 +1,8 @@
-// data.js
-// Cleaned version: same TILES shape + same tiles + same paths, but less repetition.
+
+
 
 const TILE_PRESETS = {
-  // Common terrain presets
+  
   IMPASSABLE: {
     buildable: false,
     passable: false,
@@ -12,14 +12,14 @@ const TILE_PRESETS = {
     attack_modifier: 0
   },
 
-  // Resource tiles (Mine/Library/Village) share these stats across themes in your original.
+ 
   RESOURCE_COMMON: {
     buildable: false,
     passable: true,
     cost: 45,
     points: 1,
-    defense_modifier: 1.3, // These might be wrong
-    attack_modifier: 0.7   // These might be wrong
+    defense_modifier: 0.8, 
+    attack_modifier: 1.0   
   }
 };
 
@@ -52,7 +52,7 @@ function makeImpassable({ name, color, src }) {
 }
 
 function makeResource({ name, src }) {
-  // Your original uses the same color for resource tiles across themes
+  
   return makeTile({
     name,
     color: '#eeeeee',
@@ -62,9 +62,9 @@ function makeResource({ name, src }) {
 }
 
 const TILES = {
-  // Tile type
+  
   standard: {
-    // Tile Theme
+    
     grass: [
       makeTile({
         name: 'Grassland',
@@ -88,13 +88,13 @@ const TILES = {
         defense_modifier: 1.1,
         attack_modifier: 0.9
       }),
-      // Impassable
+      
       makeImpassable({
         name: 'Mountains',
         color: '#777777',
         src: './img/standard/grass/Mountains.png'
       }),
-      // Unbuildable but passable
+      
       makeTile({
         name: 'Rocky Hills',
         color: '#999999',
@@ -114,8 +114,8 @@ const TILES = {
         passable: true,
         cost: 45,
         points: 1,
-        defense_modifier: 1.3,
-        attack_modifier: 0.7
+        defense_modifier: 1.2,
+        attack_modifier: 0.8
       }),
       makeTile({
         name: 'Swamp',
@@ -128,7 +128,7 @@ const TILES = {
         defense_modifier: 1.0,
         attack_modifier: 1.0
       }),
-      // Impassable
+      
       makeImpassable({
         name: 'Water',
         color: '#6495ed',
@@ -159,13 +159,13 @@ const TILES = {
         defense_modifier: 1.1,
         attack_modifier: 0.9
       }),
-      // Impassable
+      
       makeImpassable({
         name: 'Mountains',
         color: '#777777',
         src: './img/standard/sand/Sandy_Mountains.png'
       }),
-      // Unbuildable but passable
+      
       makeTile({
         name: 'Sandy Hills',
         color: '#BB9C87',
@@ -185,8 +185,8 @@ const TILES = {
         passable: true,
         cost: 45,
         points: 1,
-        defense_modifier: 1.3,
-        attack_modifier: 0.7
+        defense_modifier: 1.2,
+        attack_modifier: 0.8
       }),
       makeTile({
         name: 'Swamp',
@@ -199,7 +199,7 @@ const TILES = {
         defense_modifier: 1.0,
         attack_modifier: 1.0
       }),
-      // Impassable
+      
       makeImpassable({
         name: 'Water',
         color: '#6495ed',
@@ -230,13 +230,13 @@ const TILES = {
         defense_modifier: 1.10,
         attack_modifier: 0.9
       }),
-      // Impassable
+      
       makeImpassable({
         name: 'Mountains',
         color: '#777777',
         src: './img/standard/easter/Mountains.png'
       }),
-      // Unbuildable but passable
+      
       makeTile({
         name: 'Practice Ground',
         color: '#999999',
@@ -270,7 +270,7 @@ const TILES = {
         defense_modifier: 1.0,
         attack_modifier: 1.0
       }),
-      // Impassable
+      
       makeImpassable({
         name: 'Water',
         color: '#6495ed',
@@ -301,13 +301,13 @@ const TILES = {
         defense_modifier: 1.1,
         attack_modifier: 0.9
       }),
-      // Impassable
+      
       makeImpassable({
         name: 'Ghastly Mountain',
         color: '#777777',
         src: './img/standard/halloween/Ghastly_Mountain.png'
       }),
-      // Unbuildable but passable
+      
       makeTile({
         name: 'Rocky Hills',
         color: '#999999',
@@ -327,8 +327,8 @@ const TILES = {
         passable: true,
         cost: 45,
         points: 1,
-        defense_modifier: 1.3,
-        attack_modifier: 0.7
+        defense_modifier: 1.2,
+        attack_modifier: 0.8
       }),
       makeTile({
         name: 'Swamp of Terror',
@@ -341,7 +341,7 @@ const TILES = {
         defense_modifier: 1.0,
         attack_modifier: 1.0
       }),
-      // Impassable
+      
       makeImpassable({
         name: 'Piranha Resivour',
         color: '#6495ed',
@@ -372,13 +372,13 @@ const TILES = {
         defense_modifier: 1.1,
         attack_modifier: 0.9
       }),
-      // Impassable
+      
       makeImpassable({
         name: 'Mt. Frosty',
         color: '#777777',
         src: './img/standard/winter/Mt._Frosty.png'
       }),
-      // Unbuildable but passable
+      
       makeTile({
         name: 'Slippery Slopes',
         color: '#999999',
@@ -398,8 +398,8 @@ const TILES = {
         passable: true,
         cost: 36,
         points: 1,
-        defense_modifier: 1.3,
-        attack_modifier: 0.7
+        defense_modifier: 1.2,
+        attack_modifier: 0.8
       }),
       makeTile({
         name: 'Frozen Swamp',
@@ -412,7 +412,7 @@ const TILES = {
         defense_modifier: 1.0,
         attack_modifier: 1.0
       }),
-      // Impassable
+      
       makeImpassable({
         name: 'Water',
         color: '#6495ed',
@@ -464,8 +464,8 @@ const TILES = {
         passable: true,
         cost: 20,
         points: 35,
-        defense_modifier: 0.8,
-        attack_modifier: 1.0
+        defense_modifier: 1.2,
+        attack_modifier: 0.8
       })
     ],
 
@@ -542,7 +542,7 @@ const TILES = {
         defense_modifier: 1.3,
         attack_modifier: 0.7
       }),
-      // These three were in "special" but their src points to ./img/resource/easter/... in your original, so kept exactly.
+      
       makeTile({
         name: 'Egg Mine',
         color: '#eeeeee',
@@ -551,8 +551,8 @@ const TILES = {
         passable: true,
         cost: 26,
         points: 5,
-        defense_modifier: 1.10, // These might be wrong
-        attack_modifier: 0.9   // These might be wrong
+        defense_modifier: 1.10, 
+        attack_modifier: 0.9   
       }),
       makeTile({
         name: 'Giant Hare',
@@ -562,8 +562,8 @@ const TILES = {
         passable: true,
         cost: 40,
         points: 5,
-        defense_modifier: 0.8, // These might be wrong
-        attack_modifier: 1.0   // These might be wrong
+        defense_modifier: 0.8, 
+        attack_modifier: 1.0   
       }),
       makeTile({
         name: 'Eggsercise Yard',
@@ -573,8 +573,8 @@ const TILES = {
         passable: true,
         cost: 20,
         points: 5,
-        defense_modifier: 0.8, // These might be wrong
-        attack_modifier: 1.0   // These might be wrong
+        defense_modifier: 0.8, 
+        attack_modifier: 1.0   
       })
     ],
 
@@ -623,7 +623,7 @@ const TILES = {
         defense_modifier: 1.3,
         attack_modifier: 0.7
       }),
-      // Impassable
+      
       makeImpassable({
         name: 'Ice Floes',
         color: '#999999',
@@ -660,7 +660,7 @@ const TILES = {
     ]
   },
 
-  // Should these mock the same format as above?
+  
   blank: [
     makeTile({
       name: 'Unexplored Territory',
@@ -676,9 +676,10 @@ const TILES = {
     })
   ],
 
-  // Methods?
+  
   getIndex: (theme, set) => {
-    // keep behavior but make it safe
+    
     return TILES[theme]?.[set]?.length ?? 0;
   }
+
 };
