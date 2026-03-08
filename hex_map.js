@@ -862,7 +862,57 @@ window.onload = () => {
     gridEl.addEventListener('pointerup', endStroke);
     gridEl.addEventListener('pointercancel', endStroke);
   }
+  if (gridEl) {
+    const touchToCell = (touch) => {
+      const el = document.elementFromPoint(touch.clientX, touch.clientY);
+      const hex = el?.closest?.('.hexagon');
+      return hex?.dataset?.cell || null;
+    };
 
+    let touchPainting = false;
+
+    gridEl.addEventListener('touchstart', (e) => {
+      if (!e.touches || !e.touches.length) return;
+      e.preventDefault();
+
+      const cell = touchToCell(e.touches[0]);
+      if (!cell) return;
+
+      touchPainting = true;
+      lastCell = cell;
+
+      strokeBefore = new Map();
+      strokeAfter = new Map();
+
+      applyPaintToCell(cell);
+    }, { passive: false });
+
+    gridEl.addEventListener('touchmove', (e) => {
+      if (!touchPainting) return;
+      if (!e.touches || !e.touches.length) return;
+      e.preventDefault();
+
+      const cell = touchToCell(e.touches[0]);
+      if (!cell || cell === lastCell) return;
+
+      lastCell = cell;
+      applyPaintToCell(cell);
+    }, { passive: false });
+
+    const endTouchStroke = () => {
+      if (!touchPainting) return;
+
+      touchPainting = false;
+      lastCell = null;
+
+      if (strokeBefore && strokeAfter) pushHistory(strokeBefore, strokeAfter);
+      strokeBefore = null;
+      strokeAfter = null;
+    };
+
+    gridEl.addEventListener('touchend', endTouchStroke, { passive: true });
+    gridEl.addEventListener('touchcancel', endTouchStroke, { passive: true });
+  }
   
   document.addEventListener('keydown', (e) => {
     const isMac = navigator.platform.toUpperCase().includes('MAC');
