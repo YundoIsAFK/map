@@ -649,9 +649,9 @@ const TILES = {
       makeResource({ name: 'Remote Village', src: './img/resource/halloween/Village.png' })
     ],
     easter: [
-      makeResource({ name: 'Mine', src: './img/resource/easter/Egg_Mine.png' }),
-      makeResource({ name: 'Library', src: './img/resource/easter/Giant_Hare.png' }),
-      makeResource({ name: 'Remote Village', src: './img/resource/easter/Eggsercise_Yard.png' })
+      makeResource({ name: 'Egg Mine', src: './img/resource/easter/Egg_Mine.png' }),
+      makeResource({ name: 'Giant Hare', src: './img/resource/easter/Giant_Hare.png' }),
+      makeResource({ name: 'Eggsercise Yard', src: './img/resource/easter/Eggsercise_Yard.png' })
     ],
     winter: [
       makeResource({ name: 'Mine', src: './img/resource/winter/Mine.png' }),
@@ -683,4 +683,5 @@ const TILES = {
   }
 
 };
+
 
