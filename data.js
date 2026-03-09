@@ -542,40 +542,6 @@ const TILES = {
         defense_modifier: 1.3,
         attack_modifier: 0.7
       }),
-      
-      makeTile({
-        name: 'Egg Mine',
-        color: '#eeeeee',
-        src: './img/resource/easter/Egg_Mine.png',
-        buildable: false,
-        passable: true,
-        cost: 26,
-        points: 5,
-        defense_modifier: 1.10, 
-        attack_modifier: 0.9   
-      }),
-      makeTile({
-        name: 'Giant Hare',
-        color: '#eeeeee',
-        src: './img/resource/easter/Giant_Hare.png',
-        buildable: false,
-        passable: true,
-        cost: 40,
-        points: 5,
-        defense_modifier: 0.8, 
-        attack_modifier: 1.0   
-      }),
-      makeTile({
-        name: 'Eggsercise Yard',
-        color: '#eeeeee',
-        src: './img/resource/easter/Eggsercise_Yard.png',
-        buildable: false,
-        passable: true,
-        cost: 20,
-        points: 5,
-        defense_modifier: 0.8, 
-        attack_modifier: 1.0   
-      })
     ],
 
     winter: [
@@ -683,5 +649,6 @@ const TILES = {
   }
 
 };
+
 
 
