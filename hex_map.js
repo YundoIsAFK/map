@@ -873,10 +873,20 @@ window.onload = () => {
 
     gridEl.addEventListener('touchstart', (e) => {
       if (!e.touches || !e.touches.length) return;
-      e.preventDefault();
+
+      // 2 fingers = let the browser handle pan/zoom
+      if (e.touches.length >= 2) {
+        touchPainting = false;
+        lastCell = null;
+        strokeBefore = null;
+        strokeAfter = null;
+        return;
+      }
 
       const cell = touchToCell(e.touches[0]);
       if (!cell) return;
+
+      e.preventDefault();
 
       touchPainting = true;
       lastCell = cell;
@@ -888,12 +898,26 @@ window.onload = () => {
     }, { passive: false });
 
     gridEl.addEventListener('touchmove', (e) => {
+      // 2 fingers = stop painting and let browser pan/zoom
+      if (e.touches && e.touches.length >= 2) {
+        if (touchPainting) {
+          touchPainting = false;
+
+          if (strokeBefore && strokeAfter) pushHistory(strokeBefore, strokeAfter);
+          strokeBefore = null;
+          strokeAfter = null;
+          lastCell = null;
+        }
+        return;
+      }
+
       if (!touchPainting) return;
       if (!e.touches || !e.touches.length) return;
-      e.preventDefault();
 
       const cell = touchToCell(e.touches[0]);
       if (!cell || cell === lastCell) return;
+
+      e.preventDefault();
 
       lastCell = cell;
       applyPaintToCell(cell);
