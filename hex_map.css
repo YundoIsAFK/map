@@ -323,7 +323,7 @@ body{
 }
 
 .grid{
-  touch-action: pan-x pan-y;
+  touch-action: pinch-zoom pan-x pan-y;
   -webkit-user-select: none;
   user-select: none;
   padding: 10px;
