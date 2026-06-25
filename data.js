@@ -16,7 +16,7 @@ const TILE_PRESETS = {
   RESOURCE_COMMON: {
     buildable: false,
     passable: true,
-    cost: 22,
+    cost: 45,
     points: 1,
     defense_modifier: 0.8, 
     attack_modifier: 1.0   
@@ -29,7 +29,7 @@ function makeTile({
   src,
   buildable,
   passable,
-  ,
+  cost,
   points,
   defense_modifier,
   attack_modifier
@@ -72,7 +72,7 @@ const TILES = {
         src: './img/standard/grass/Grassland.png',
         buildable: true,
         passable: true,
-        cost: 22,
+        cost: 25,
         points: 1,
         defense_modifier: 0.8,
         attack_modifier: 1.0
@@ -83,7 +83,7 @@ const TILES = {
         src: './img/standard/grass/Green_Hills.png',
         buildable: true,
         passable: true,
-        cost: 29,
+        cost: 33,
         points: 1,
         defense_modifier: 1.1,
         attack_modifier: 0.9
@@ -101,7 +101,7 @@ const TILES = {
         src: './img/standard/grass/Rocky_Hills.png',
         buildable: false,
         passable: true,
-        cost: 33,
+        cost: 38,
         points: 1,
         defense_modifier: 0.7,
         attack_modifier: 1.5
@@ -112,7 +112,7 @@ const TILES = {
         src: './img/standard/grass/Forest.png',
         buildable: true,
         passable: true,
-        cost: 40,
+        cost: 45,
         points: 1,
         defense_modifier: 1.2,
         attack_modifier: 0.8
@@ -123,7 +123,7 @@ const TILES = {
         src: './img/standard/grass/Swamp.png',
         buildable: true,
         passable: true,
-        cost: 55,
+        cost: 50,
         points: 1,
         defense_modifier: 1.0,
         attack_modifier: 1.0
@@ -143,7 +143,7 @@ const TILES = {
         src: './img/standard/sand/Desert.png',
         buildable: true,
         passable: true,
-        cost: 18,
+        cost: 26,
         points: 1,
         defense_modifier: 0.5,
         attack_modifier: 0.8
@@ -154,7 +154,7 @@ const TILES = {
         src: './img/standard/sand/Green_Hills.png',
         buildable: true,
         passable: true,
-        cost: 29,
+        cost: 33,
         points: 1,
         defense_modifier: 1.1,
         attack_modifier: 0.9
@@ -183,7 +183,7 @@ const TILES = {
         src: './img/standard/sand/Forest.png',
         buildable: true,
         passable: true,
-        cost: 40,
+        cost: 45,
         points: 1,
         defense_modifier: 1.2,
         attack_modifier: 0.8
@@ -194,7 +194,7 @@ const TILES = {
         src: './img/standard/sand/Swamp.png',
         buildable: true,
         passable: true,
-        cost: 55,
+        cost: 50,
         points: 1,
         defense_modifier: 1.0,
         attack_modifier: 1.0
@@ -243,7 +243,7 @@ const TILES = {
         src: './img/standard/easter/Practice_Ground.png',
         buildable: false,
         passable: true,
-        cost: 22,
+        cost: 30,
         points: 1,
         defense_modifier: 1.5,
         attack_modifier: 0.7
@@ -649,6 +649,5 @@ const TILES = {
   }
 
 };
-
 
 
