@@ -12,17 +12,6 @@ window.onload = () => {
     return result.toUpperCase();
   };
 
-  const normalizeWidth = (value) => {
-    const s = String(value || '').toUpperCase().replace(/[^A-Z]/g, '');
-    return s.length ? s : 'C';
-  };
-
-  const normalizeHeight = (value) => {
-    const n = parseInt(value, 10);
-    if (!Number.isFinite(n) || n < 1) return 3;
-    return n;
-  };
-
   const clampIndex = (idx, len) => {
     if (!len) return 0;
     const n = Number(idx) || 0;
@@ -48,6 +37,58 @@ window.onload = () => {
       for (let i = 0; i < arr.length; i++) activeTiles.push(arr[i]);
     });
     return activeTiles;
+  };
+
+  // Every theme/palette (grass, sand, halloween, easter, winter, ...) is
+  // read straight from data.js rather than hardcoded, so new palettes
+  // just need an entry in TILES to show up here. Themes are NOT required
+  // to share tile counts or ordering with each other.
+  const THEME_KEYS = Object.keys(TILES?.standard || {});
+
+  const themeTilesCache = new Map();
+  const tilesForTheme = (theme) => {
+    if (!themeTilesCache.has(theme)) themeTilesCache.set(theme, getActiveTiles(theme));
+    return themeTilesCache.get(theme);
+  };
+
+  // Each painted cell remembers which theme/palette it was painted from,
+  // not just a bare index. That way switching the active palette (to pick
+  // a different set of tiles to paint with) never reinterprets tiles that
+  // are already on the map under the old palette's numbering.
+  const encodeCell = (theme, idx) => `${theme}:${idx}`;
+
+  const decodeCell = (raw) => {
+    if (raw === undefined || raw === null) return null;
+
+    if (typeof raw === 'number') return { theme: FIXED_THEME, idx: raw };
+
+    const s = String(raw);
+    const sep = s.lastIndexOf(':');
+    if (sep === -1) {
+      const n = Number(s);
+      return Number.isFinite(n) ? { theme: FIXED_THEME, idx: n } : null;
+    }
+
+    const theme = s.slice(0, sep);
+    const idx = Number(s.slice(sep + 1));
+    return { theme, idx: Number.isFinite(idx) ? idx : 0 };
+  };
+
+  // Resolves a stored cell value to a concrete { theme, idx, tiles, tile }
+  // regardless of which palette is currently active, falling back to the
+  // default ground tile if the value is missing/invalid or its theme no
+  // longer exists in data.js.
+  const resolveCell = (raw) => {
+    let data = decodeCell(raw);
+    let tiles = data ? tilesForTheme(data.theme) : [];
+
+    if (!data || !tiles.length) {
+      data = { theme: FIXED_THEME, idx: DEFAULT_TILE_INDEX };
+      tiles = tilesForTheme(FIXED_THEME);
+    }
+
+    const idx = clampIndex(data.idx, tiles.length);
+    return { theme: data.theme, idx, tiles, tile: tiles[idx] };
   };
 
   const makeTitleText = (data) => {
@@ -109,9 +150,14 @@ window.onload = () => {
   };
 
   
+  // Every map is generated at a fixed size and theme. There is no
+  // per-map width/height/theme control anymore.
+  const FIXED_WIDTH = 'AS';
+  const FIXED_HEIGHT = 46;
+  const FIXED_THEME = 'grass';
+  const DEFAULT_TILE_INDEX = 0; // brand-new cells always start as the first palette tile
+
   const gridEl = document.getElementById('grid');
-  const widthEl = document.getElementById('width');
-  const heightEl = document.getElementById('height');
   const centerEl = document.getElementById('center');
 
   const buildableEl = document.getElementById('buildable');
@@ -126,14 +172,10 @@ window.onload = () => {
   const exportPngBtn = document.getElementById('export-png');
   const importBtn = document.getElementById('import');
 
-  const changeThemeEl = document.getElementById('change-theme');
-
-  const themeBtn = document.getElementById('theme-btn');
-  const themeMenu = document.getElementById('theme-menu');
-  const themeLabel = document.getElementById('theme-label');
-  const hiddenThemeInput = document.getElementById('theme');
-
   const paletteEl = document.getElementById('palette');
+  const paletteThemeBtn = document.getElementById('palette-theme-btn');
+  const paletteThemeMenu = document.getElementById('palette-theme-menu');
+  const paletteThemeLabel = document.getElementById('palette-theme-label');
 
   const modal = document.getElementById('modal');
   const modalTitle = document.getElementById('modal-title');
@@ -144,22 +186,25 @@ window.onload = () => {
   const modalSecondary = document.getElementById('modal-secondary');
 
   
-  let selectedTheme = localStorage.getItem('theme') || 'grass';
-  let activeTiles = getActiveTiles(selectedTheme);
-  if (!activeTiles.length) {
-    selectedTheme = 'grass';
-    localStorage.setItem('theme', selectedTheme);
-    activeTiles = getActiveTiles(selectedTheme);
-  }
-
   const gridColors = JSON.parse(localStorage.getItem('hexMap')) || {};
 
-  const localWidth = normalizeWidth(localStorage.getItem('width') || (widthEl ? widthEl.value : 'AO') || 'AO');
-  const localHeight = normalizeHeight(localStorage.getItem('height') || (heightEl ? heightEl.value : 42) || 42);
+  const endWidth = fromAlpha(FIXED_WIDTH);
+  const endHeight = FIXED_HEIGHT;
 
-  let endWidth = fromAlpha(localWidth);
-  let endHeight = parseInt(localHeight, 10);
+  // "paletteTheme" is which palette (grass/sand/halloween/etc) the brush is
+  // currently painting from. It only decides what's offered in the Palette
+  // panel and what gets stamped onto newly-painted cells — it has no effect
+  // on the map's fixed base theme, and switching it never touches tiles
+  // already on the map (each of those remembers its own theme, see above).
+  let paletteTheme = String(localStorage.getItem('paletteTheme') || '').trim();
+  if (!THEME_KEYS.includes(paletteTheme)) paletteTheme = THEME_KEYS.includes(FIXED_THEME) ? FIXED_THEME : (THEME_KEYS[0] || FIXED_THEME);
 
+  let activeTiles = tilesForTheme(paletteTheme);
+
+  // "selectedIndex" is the paint tool (which tile within the active
+  // palette the brush currently places), independent from
+  // DEFAULT_TILE_INDEX which is what a brand new, never-painted cell
+  // starts out as (always the map's fixed base theme).
   let selectedIndex = clampIndex(localStorage.getItem('selectedTile'), activeTiles.length);
 
   const legacyFill = localStorage.getItem('fillColor');
@@ -168,6 +213,13 @@ window.onload = () => {
     localStorage.setItem('selectedTile', String(selectedIndex));
     localStorage.removeItem('fillColor');
   }
+
+  // Clean up now-unused legacy keys from earlier versions of the app
+  // that had per-map width/height/theme controls.
+  localStorage.removeItem('width');
+  localStorage.removeItem('height');
+  localStorage.removeItem('theme');
+  localStorage.removeItem('change-theme');
 
   const counters = { buildable: 0, points: 0 };
 
@@ -201,10 +253,10 @@ window.onload = () => {
       const cell = hex.dataset.cell;
       if (!cell) continue;
 
-      const idx = clampIndex(gridColors[cell], activeTiles.length);
-      gridColors[cell] = idx;
+      const resolved = resolveCell(gridColors[cell]);
+      gridColors[cell] = encodeCell(resolved.theme, resolved.idx);
 
-      const t = activeTiles[idx];
+      const t = resolved.tile;
       if (!t) continue;
 
       counters.buildable += t.buildable ? 1 : 0;
@@ -214,31 +266,10 @@ window.onload = () => {
     updateStatsUI();
   };
 
-  const setThemeUI = (themeValue) => {
-    if (hiddenThemeInput) hiddenThemeInput.value = themeValue;
-
-    const labelMap = { grass: 'Grass', sand: 'Sand', halloween: 'Halloween', easter: 'Easter', winter: 'Winter' };
-    if (themeLabel) themeLabel.textContent = labelMap[themeValue] || themeValue;
-
-    if (themeMenu) {
-      for (const btn of themeMenu.querySelectorAll('.dropdown-item')) {
-        btn.classList.toggle('active', btn.dataset.value === themeValue);
-      }
-    }
-  };
-
-  const toggleThemeMenu = (forceOpen = null) => {
-    if (!themeBtn || !themeMenu) return;
-    const isOpen = themeBtn.getAttribute('aria-expanded') === 'true';
-    const next = forceOpen === null ? !isOpen : !!forceOpen;
-    themeBtn.setAttribute('aria-expanded', next ? 'true' : 'false');
-    themeMenu.classList.toggle('open', next);
-  };
-
   const shouldSkipFromPalette = (tileObj) => {
     if (!tileObj) return true;
 
-    if (selectedTheme === 'easter') {
+    if (paletteTheme === 'easter') {
       const n = String(tileObj.name || '').toLowerCase();
       const isBaseResource = n === 'mine' || n === 'library' || n === 'remote village' || n === 'village';
       const src = String(tileObj.src || '');
@@ -298,6 +329,56 @@ window.onload = () => {
     highlightPaletteSelection();
   };
 
+  const titleCase = (s) => String(s || '').replace(/\b\w/g, (c) => c.toUpperCase());
+
+  const buildPaletteThemeMenu = () => {
+    if (!paletteThemeMenu) return;
+    paletteThemeMenu.innerHTML = '';
+
+    for (const theme of THEME_KEYS) {
+      const item = document.createElement('button');
+      item.type = 'button';
+      item.className = 'dropdown-item';
+      item.dataset.value = theme;
+      item.textContent = titleCase(theme);
+      paletteThemeMenu.appendChild(item);
+    }
+  };
+
+  const updatePaletteThemeUI = () => {
+    if (paletteThemeLabel) paletteThemeLabel.textContent = titleCase(paletteTheme);
+
+    if (paletteThemeMenu) {
+      for (const btn of paletteThemeMenu.querySelectorAll('.dropdown-item')) {
+        btn.classList.toggle('active', btn.dataset.value === paletteTheme);
+      }
+    }
+  };
+
+  const togglePaletteThemeMenu = (forceOpen = null) => {
+    if (!paletteThemeBtn || !paletteThemeMenu) return;
+    const isOpen = paletteThemeBtn.getAttribute('aria-expanded') === 'true';
+    const next = forceOpen === null ? !isOpen : !!forceOpen;
+    paletteThemeBtn.setAttribute('aria-expanded', next ? 'true' : 'false');
+    paletteThemeMenu.classList.toggle('open', next);
+  };
+
+  // Switching the active palette only changes what's available to paint
+  // WITH from here on — it never touches tiles already placed on the map.
+  const setPaletteTheme = (theme) => {
+    if (!THEME_KEYS.includes(theme) || theme === paletteTheme) return;
+
+    paletteTheme = theme;
+    localStorage.setItem('paletteTheme', paletteTheme);
+
+    activeTiles = tilesForTheme(paletteTheme);
+    selectedIndex = 0;
+    localStorage.setItem('selectedTile', String(selectedIndex));
+
+    updatePaletteThemeUI();
+    buildPalette();
+  };
+
   const isValidCell = (cell) => {
     const parts = getCoords(cell);
     if (!parts) return false;
@@ -333,16 +414,10 @@ window.onload = () => {
     if (even) hexagon.classList.add('even');
     if (hidden) hexagon.style.visibility = 'hidden';
 
-    let idx = gridColors[text];
-    if (idx === undefined || idx === null) {
-      idx = selectedIndex;
-      gridColors[text] = idx;
-    }
+    const resolved = resolveCell(gridColors[text]);
+    gridColors[text] = encodeCell(resolved.theme, resolved.idx);
 
-    idx = clampIndex(idx, activeTiles.length);
-    gridColors[text] = idx;
-
-    const currentTile = activeTiles[idx] || activeTiles[0];
+    const currentTile = resolved.tile || resolved.tiles[0];
     hexagon.title = makeTitleText(currentTile);
 
     if (currentTile?.src && currentTile.src.length) {
@@ -400,21 +475,6 @@ window.onload = () => {
     updateStatsUI();
   };
 
-  const repaintEntireGrid = () => {
-    const hexes = document.querySelectorAll('#grid .hexagon');
-    for (const hex of hexes) {
-      const cell = hex.dataset.cell;
-      if (!cell) continue;
-      const idx = clampIndex(gridColors[cell], activeTiles.length);
-      gridColors[cell] = idx;
-      const nextTile = activeTiles[idx];
-      if (!nextTile) continue;
-      updateTile(nextTile, cell);
-    }
-    localStorage.setItem('hexMap', JSON.stringify(gridColors));
-    recalcCountersFromDOM();
-  };
-
   const getMirrors = (cellIndex) => {
     const [xAlpha, yStr] = getCoords(cellIndex);
     const y = Number(yStr);
@@ -441,18 +501,17 @@ window.onload = () => {
     mirrors.forEach((cell) => {
       if (!isValidCell(cell)) return;
 
-      const beforeIdx = clampIndex(gridColors[cell], activeTiles.length);
-      const oldTile = activeTiles[beforeIdx];
+      const beforeRaw = gridColors[cell];
+      const before = resolveCell(beforeRaw);
+      const oldTile = before.tile;
 
       if (oldTile) {
         counters.buildable -= oldTile.buildable ? 1 : 0;
         counters.points -= Number(oldTile.points) || 0;
       }
 
-      gridColors[cell] = selectedIndex;
-
-      const afterIdx = clampIndex(gridColors[cell], activeTiles.length);
-      gridColors[cell] = afterIdx;
+      const afterIdx = clampIndex(selectedIndex, activeTiles.length);
+      gridColors[cell] = encodeCell(paletteTheme, afterIdx);
 
       const nextTile = activeTiles[afterIdx];
       if (!nextTile) return;
@@ -462,7 +521,7 @@ window.onload = () => {
       counters.buildable += nextTile.buildable ? 1 : 0;
       counters.points += Number(nextTile.points) || 0;
 
-      recordStrokeChange(cell, beforeIdx, afterIdx);
+      recordStrokeChange(cell, encodeCell(before.theme, before.idx), gridColors[cell]);
     });
 
     localStorage.setItem('hexMap', JSON.stringify(gridColors));
@@ -490,11 +549,10 @@ window.onload = () => {
     for (const cell of Object.keys(stateObj)) {
       if (!isValidCell(cell)) continue;
 
-      const idx = clampIndex(stateObj[cell], activeTiles.length);
-      gridColors[cell] = idx;
+      const resolved = resolveCell(stateObj[cell]);
+      gridColors[cell] = encodeCell(resolved.theme, resolved.idx);
 
-      const tile = activeTiles[idx];
-      if (tile) updateTile(tile, cell);
+      if (resolved.tile) updateTile(resolved.tile, cell);
     }
 
     localStorage.setItem('hexMap', JSON.stringify(gridColors));
@@ -518,18 +576,17 @@ window.onload = () => {
   };
 
   
+  // The map's size and base theme are fixed for every map, so exports
+  // mainly carry the tile layout (each cell already remembers its own
+  // theme+tile) plus which palette/tile the brush currently has selected.
   const buildExportPayload = () => {
-    const applyThemeToMap = changeThemeEl ? !!changeThemeEl.checked : true;
-    const wLive = normalizeWidth(widthEl?.value || localStorage.getItem('width') || 'AO');
-    const hLive = normalizeHeight(heightEl?.value || localStorage.getItem('height') || 42);
-
     return {
       v: 1,
-      width: wLive,
-      height: hLive,
-      theme: selectedTheme,
+      width: FIXED_WIDTH,
+      height: FIXED_HEIGHT,
+      theme: FIXED_THEME,
+      paletteTheme,
       selectedTile: selectedIndex,
-      applyThemeToMap,
       gridColors
     };
   };
@@ -542,8 +599,8 @@ window.onload = () => {
       w: payload.width,
       h: payload.height,
       t: payload.theme,
+      pt: payload.paletteTheme,
       s: payload.selectedTile,
-      a: payload.applyThemeToMap ? 1 : 0,
       g: payload.gridColors
     };
     const json = JSON.stringify(compact);
@@ -562,11 +619,8 @@ window.onload = () => {
 
       return {
         v: compact.v || 1,
-        width: compact.w,
-        height: compact.h,
-        theme: compact.t,
+        paletteTheme: compact.pt,
         selectedTile: compact.s,
-        applyThemeToMap: !!compact.a,
         gridColors: compact.g
       };
     }
@@ -579,16 +633,16 @@ window.onload = () => {
     if (!obj || typeof obj !== 'object') return false;
     if (!obj.gridColors || typeof obj.gridColors !== 'object') return false;
 
-    const w = normalizeWidth(obj.width);
-    const h = normalizeHeight(obj.height);
-    const t = String(obj.theme || '').trim() || 'grass';
+    if (obj.paletteTheme && THEME_KEYS.includes(obj.paletteTheme)) {
+      paletteTheme = obj.paletteTheme;
+      localStorage.setItem('paletteTheme', paletteTheme);
+      activeTiles = tilesForTheme(paletteTheme);
+    }
 
-    localStorage.setItem('width', w);
-    localStorage.setItem('height', String(h));
-    localStorage.setItem('theme', t);
-
-    if (obj.selectedTile !== undefined) localStorage.setItem('selectedTile', String(obj.selectedTile));
-    if (obj.applyThemeToMap !== undefined) localStorage.setItem('change-theme', String(!!obj.applyThemeToMap));
+    if (obj.selectedTile !== undefined) {
+      selectedIndex = clampIndex(obj.selectedTile, activeTiles.length);
+      localStorage.setItem('selectedTile', String(selectedIndex));
+    }
 
     
     for (const k of Object.keys(gridColors)) delete gridColors[k];
@@ -629,7 +683,6 @@ window.onload = () => {
         if (imgCache.has(src)) return resolve(imgCache.get(src));
 
         const img = new Image();
-        img.crossOrigin = 'anonymous';
         img.onload = () => {
           imgCache.set(src, img);
           resolve(img);
@@ -689,12 +742,11 @@ window.onload = () => {
       }
 
       
-      const idx = clampIndex(gridColors[cell], activeTiles.length);
-      const tile = activeTiles[idx];
+      const tile = resolveCell(gridColors[cell]).tile;
       drawHexFallback(x, y, w, h, tile?.color || '#444');
     }
 
-    const filename = `hex_map_${normalizeWidth(widthEl?.value || 'C')}_${normalizeHeight(heightEl?.value || 3)}.png`;
+    const filename = `hex_map_${FIXED_WIDTH}_${FIXED_HEIGHT}.png`;
 
     const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
     if (!blob) throw new Error('toBlob failed');
@@ -758,58 +810,8 @@ window.onload = () => {
   };
 
   
-  const changeTheme = (nextTheme) => {
-    selectedTheme = nextTheme;
-    localStorage.setItem('theme', selectedTheme);
-
-    activeTiles = getActiveTiles(selectedTheme);
-    if (!activeTiles.length) {
-      selectedTheme = 'grass';
-      localStorage.setItem('theme', selectedTheme);
-      activeTiles = getActiveTiles(selectedTheme);
-    }
-
-    selectedIndex = clampIndex(selectedIndex, activeTiles.length);
-    localStorage.setItem('selectedTile', String(selectedIndex));
-
-    setThemeUI(selectedTheme);
-    buildPalette();
-
-    const applyThemeToMap = changeThemeEl ? !!changeThemeEl.checked : true;
-    if (applyThemeToMap) repaintEntireGrid();
-    else recalcCountersFromDOM();
-  };
-
-  const applyNewSize = () => {
-    const w = normalizeWidth(widthEl?.value || 'C');
-    const h = normalizeHeight(heightEl?.value || 3);
-
-    localStorage.setItem('width', w);
-    localStorage.setItem('height', String(h));
-
-    endWidth = fromAlpha(w);
-    endHeight = parseInt(h, 10);
-
-    if (centerEl) centerEl.textContent = findCenter(endWidth, endHeight);
-
-    
-    undoStack.length = 0;
-    redoStack.length = 0;
-    updateUndoRedoUI();
-
-    rebuildGridDOM();
-  };
-
-  
-  if (widthEl) widthEl.value = localWidth;
-  if (heightEl) heightEl.value = String(localHeight);
-
-  if (changeThemeEl) {
-    const savedCT = localStorage.getItem('change-theme');
-    if (savedCT !== null) changeThemeEl.checked = (savedCT === 'true');
-  }
-
-  setThemeUI(selectedTheme);
+  buildPaletteThemeMenu();
+  updatePaletteThemeUI();
   buildPalette();
 
   if (centerEl) centerEl.textContent = findCenter(endWidth, endHeight);
@@ -972,59 +974,34 @@ window.onload = () => {
     });
   }
 
-  if (widthEl) {
-    widthEl.addEventListener('input', () => {
-      widthEl.value = normalizeWidth(widthEl.value);
-    });
-    widthEl.addEventListener('change', applyNewSize);
-    widthEl.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') applyNewSize();
-    });
-    widthEl.addEventListener('blur', applyNewSize);
-  }
-
-  if (heightEl) {
-    heightEl.addEventListener('change', applyNewSize);
-    heightEl.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') applyNewSize();
-    });
-    heightEl.addEventListener('blur', applyNewSize);
-  }
-
-  if (changeThemeEl) {
-    changeThemeEl.addEventListener('change', () => {
-      localStorage.setItem('change-theme', String(!!changeThemeEl.checked));
-    });
-  }
-
-  if (themeBtn && themeMenu) {
-    themeBtn.addEventListener('click', () => toggleThemeMenu());
-
-    themeMenu.addEventListener('click', (e) => {
-      const btn = e.target.closest?.('.dropdown-item');
-      if (!btn) return;
-      const value = btn.dataset.value;
-      if (!value) return;
-      toggleThemeMenu(false);
-      changeTheme(value);
-    });
-
-    document.addEventListener('click', (e) => {
-      const wrap = document.getElementById('theme-dropdown');
-      if (!wrap) return;
-      if (!wrap.contains(e.target)) toggleThemeMenu(false);
-    });
-
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') toggleThemeMenu(false);
-    });
-  }
-
   if (exportJsonBtn) exportJsonBtn.addEventListener('click', () => openModal('export-json'));
   if (exportCodeBtn) exportCodeBtn.addEventListener('click', () => openModal('export-code'));
   if (importBtn) importBtn.addEventListener('click', () => openModal('import'));
 
   if (exportPngBtn) exportPngBtn.addEventListener('click', exportPNG);
+
+  if (paletteThemeBtn && paletteThemeMenu) {
+    paletteThemeBtn.addEventListener('click', () => togglePaletteThemeMenu());
+
+    paletteThemeMenu.addEventListener('click', (e) => {
+      const btn = e.target.closest?.('.dropdown-item');
+      if (!btn) return;
+      const value = btn.dataset.value;
+      if (!value) return;
+      togglePaletteThemeMenu(false);
+      setPaletteTheme(value);
+    });
+
+    document.addEventListener('click', (e) => {
+      const wrap = document.getElementById('palette-theme-dropdown');
+      if (!wrap) return;
+      if (!wrap.contains(e.target)) togglePaletteThemeMenu(false);
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') togglePaletteThemeMenu(false);
+    });
+  }
 
   const closeTargets = [modalClose, modalSecondary, modal?.querySelector?.('.modal-backdrop')].filter(Boolean);
   closeTargets.forEach((el) => el.addEventListener('click', closeModal));
@@ -1049,35 +1026,14 @@ window.onload = () => {
         }
 
         
-        const w = normalizeWidth(localStorage.getItem('width') || 'C');
-        const h = normalizeHeight(localStorage.getItem('height') || 3);
-
-        if (widthEl) widthEl.value = w;
-        if (heightEl) heightEl.value = String(h);
-
-        selectedTheme = localStorage.getItem('theme') || 'grass';
-        activeTiles = getActiveTiles(selectedTheme);
-        if (!activeTiles.length) activeTiles = getActiveTiles('grass');
-
-        selectedIndex = clampIndex(localStorage.getItem('selectedTile'), activeTiles.length);
-
-        endWidth = fromAlpha(w);
-        endHeight = parseInt(h, 10);
-
-        setThemeUI(selectedTheme);
+        updatePaletteThemeUI();
         buildPalette();
-
-        if (centerEl) centerEl.textContent = findCenter(endWidth, endHeight);
 
         undoStack.length = 0;
         redoStack.length = 0;
         updateUndoRedoUI();
 
         rebuildGridDOM();
-
-        const applyThemeToMap = changeThemeEl ? !!changeThemeEl.checked : true;
-        if (applyThemeToMap) repaintEntireGrid();
-        else recalcCountersFromDOM();
 
         localStorage.setItem('hexMap', JSON.stringify(gridColors));
         closeModal();
