@@ -143,7 +143,7 @@ const TILES = {
         src: './img/standard/sand/Desert.png',
         buildable: true,
         passable: true,
-        cost: 26,
+        cost: 29,
         points: 1,
         defense_modifier: 0.5,
         attack_modifier: 0.8
@@ -172,7 +172,7 @@ const TILES = {
         src: './img/standard/sand/Sandy_Hills.png',
         buildable: false,
         passable: true,
-        cost: 38,
+        cost: 33,
         points: 1,
         defense_modifier: 0.7,
         attack_modifier: 0.9
@@ -429,7 +429,7 @@ const TILES = {
         src: './img/special/grass/Enchanted_Windmill.png',
         buildable: false,
         passable: true,
-        cost: 20,
+        cost: 22,
         points: 5,
         defense_modifier: 0.8,
         attack_modifier: 1.0
@@ -440,7 +440,7 @@ const TILES = {
         src: './img/special/grass/Boneyard.png',
         buildable: false,
         passable: true,
-        cost: 20,
+        cost: 22,
         points: 5,
         defense_modifier: 0.8,
         attack_modifier: 1.0
@@ -462,7 +462,7 @@ const TILES = {
         src: './img/special/grass/Yggdrasil.png',
         buildable: false,
         passable: true,
-        cost: 22,
+        cost: 40,
         points: 25,
         defense_modifier: 1.2,
         attack_modifier: 0.8
@@ -476,7 +476,7 @@ const TILES = {
         src: './img/special/sand/Dragon_Skull.png',
         buildable: false,
         passable: true,
-        cost: 26,
+        cost: 29,
         points: 5,
         defense_modifier: 0.5,
         attack_modifier: 0.8
