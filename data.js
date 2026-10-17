@@ -143,7 +143,7 @@ const TILES = {
         src: './img/standard/sand/Desert.png',
         buildable: true,
         passable: true,
-        cost: 29,
+        cost: 26,
         points: 1,
         defense_modifier: 0.5,
         attack_modifier: 0.8
@@ -172,7 +172,7 @@ const TILES = {
         src: './img/standard/sand/Sandy_Hills.png',
         buildable: false,
         passable: true,
-        cost: 33,
+        cost: 38,
         points: 1,
         defense_modifier: 0.7,
         attack_modifier: 0.9
@@ -290,17 +290,6 @@ const TILES = {
         defense_modifier: 0.8,
         attack_modifier: 1.0
       }),
-      makeTile({
-        name: 'Green Hills',
-        color: '#83b92d',
-        src: './img/standard/halloween/Green_Hills.png',
-        buildable: true,
-        passable: true,
-        cost: 33,
-        points: 1,
-        defense_modifier: 1.1,
-        attack_modifier: 0.9
-      }),
       
       makeImpassable({
         name: 'Ghastly Mountain',
@@ -308,17 +297,6 @@ const TILES = {
         src: './img/standard/halloween/Ghastly_Mountain.png'
       }),
       
-      makeTile({
-        name: 'Rocky Hills',
-        color: '#999999',
-        src: './img/standard/halloween/Rocky_Hills.png',
-        buildable: false,
-        passable: true,
-        cost: 38,
-        points: 1,
-        defense_modifier: 0.7,
-        attack_modifier: 1.5
-      }),
       makeTile({
         name: 'Forest of Despair',
         color: '#237007',
@@ -429,7 +407,7 @@ const TILES = {
         src: './img/special/grass/Enchanted_Windmill.png',
         buildable: false,
         passable: true,
-        cost: 22,
+        cost: 20,
         points: 5,
         defense_modifier: 0.8,
         attack_modifier: 1.0
@@ -440,7 +418,7 @@ const TILES = {
         src: './img/special/grass/Boneyard.png',
         buildable: false,
         passable: true,
-        cost: 22,
+        cost: 20,
         points: 5,
         defense_modifier: 0.8,
         attack_modifier: 1.0
@@ -462,7 +440,7 @@ const TILES = {
         src: './img/special/grass/Yggdrasil.png',
         buildable: false,
         passable: true,
-        cost: 40,
+        cost: 22,
         points: 25,
         defense_modifier: 1.2,
         attack_modifier: 0.8
@@ -476,7 +454,7 @@ const TILES = {
         src: './img/special/sand/Dragon_Skull.png',
         buildable: false,
         passable: true,
-        cost: 29,
+        cost: 26,
         points: 5,
         defense_modifier: 0.5,
         attack_modifier: 0.8
@@ -516,6 +494,17 @@ const TILES = {
         points: 20,
         defense_modifier: 1.3,
         attack_modifier: 0.7
+      }),
+      makeTile({
+        name: 'Manfred',
+        color: '#eeeeee',
+        src: './img/special/winter/Manfred.png',
+        buildable: false,
+        passable: true,
+        cost: 20,
+        points: 5,
+        defense_modifier: 0.8,
+        attack_modifier: 1.00
       })
     ],
 
@@ -650,4 +639,18 @@ const TILES = {
 
 };
 
+// Maps used to store each tile as "theme:position" (e.g. "halloween:2").
+// Maps are now stored by tile NAME ("halloween:Ghastly Mountain"), which
+// survives adding/removing/reordering tiles. This table is only used to
+// read OLD position-based saves/exports: it lists a theme's tiles in the
+// order they had at the time those saves were made. Themes not listed here
+// are read using their current order. You never need to edit this again.
+const LEGACY_TILE_ORDER = {
+  halloween: [
+    'Withered Meadow', 'Green Hills', 'Ghastly Mountain', 'Rocky Hills',
+    'Forest of Despair', 'Swamp of Terror', 'Piranha Resivour',
+    'Mine', 'Library', 'Remote Village',
+    'Pal Sematary', 'Haunted Windmill', 'Fields of Misery'
+  ]
+};
 
