@@ -51,44 +51,62 @@ window.onload = () => {
     return themeTilesCache.get(theme);
   };
 
-  // Each painted cell remembers which theme/palette it was painted from,
-  // not just a bare index. That way switching the active palette (to pick
-  // a different set of tiles to paint with) never reinterprets tiles that
-  // are already on the map under the old palette's numbering.
-  const encodeCell = (theme, idx) => `${theme}:${idx}`;
+  // Each painted cell remembers which theme/palette AND which tile (by
+  // NAME) it was painted with, e.g. "halloween:Ghastly Mountain". Storing
+  // the name instead of a position means adding, removing or reordering
+  // tiles in data.js never changes what already-painted cells show.
+  const encodeCell = (theme, idx) => {
+    const name = tilesForTheme(theme)[idx]?.name;
+    return `${theme}:${name !== undefined ? name : idx}`;
+  };
+
+  // Old saves/exports stored a position ("halloween:2" or a bare number)
+  // instead of a name. Convert those using the tile order they were made
+  // with (LEGACY_TILE_ORDER in data.js) so they still load correctly.
+  const legacyToName = (theme, n) => {
+    const legacy = (typeof LEGACY_TILE_ORDER !== 'undefined' && LEGACY_TILE_ORDER[theme]) || null;
+    if (legacy) return legacy[n];
+    return tilesForTheme(theme)[n]?.name;
+  };
 
   const decodeCell = (raw) => {
     if (raw === undefined || raw === null) return null;
 
-    if (typeof raw === 'number') return { theme: FIXED_THEME, idx: raw };
+    if (typeof raw === 'number') return { theme: FIXED_THEME, name: legacyToName(FIXED_THEME, raw) };
 
     const s = String(raw);
-    const sep = s.lastIndexOf(':');
+    const sep = s.indexOf(':');
     if (sep === -1) {
       const n = Number(s);
-      return Number.isFinite(n) ? { theme: FIXED_THEME, idx: n } : null;
+      return Number.isFinite(n) ? { theme: FIXED_THEME, name: legacyToName(FIXED_THEME, n) } : null;
     }
 
     const theme = s.slice(0, sep);
-    const idx = Number(s.slice(sep + 1));
-    return { theme, idx: Number.isFinite(idx) ? idx : 0 };
+    const rest = s.slice(sep + 1);
+    if (rest !== '' && Number.isFinite(Number(rest))) {
+      return { theme, name: legacyToName(theme, Number(rest)) };
+    }
+    return { theme, name: rest };
   };
 
   // Resolves a stored cell value to a concrete { theme, idx, tiles, tile }
-  // regardless of which palette is currently active, falling back to the
-  // default ground tile if the value is missing/invalid or its theme no
-  // longer exists in data.js.
+  // regardless of which palette is currently active. If the theme no longer
+  // exists it falls back to the default ground tile; if only the tile was
+  // removed from data.js it falls back to that theme's first tile.
   const resolveCell = (raw) => {
-    let data = decodeCell(raw);
-    let tiles = data ? tilesForTheme(data.theme) : [];
+    const data = decodeCell(raw);
+    let theme = data ? data.theme : FIXED_THEME;
+    let tiles = tilesForTheme(theme);
 
-    if (!data || !tiles.length) {
-      data = { theme: FIXED_THEME, idx: DEFAULT_TILE_INDEX };
+    if (!tiles.length) {
+      theme = FIXED_THEME;
       tiles = tilesForTheme(FIXED_THEME);
     }
 
-    const idx = clampIndex(data.idx, tiles.length);
-    return { theme: data.theme, idx, tiles, tile: tiles[idx] };
+    let idx = data && data.name !== undefined ? tiles.findIndex((t) => t.name === data.name) : -1;
+    if (idx < 0) idx = (data && tilesForTheme(data.theme).length) ? 0 : DEFAULT_TILE_INDEX;
+
+    return { theme, idx, tiles, tile: tiles[idx] };
   };
 
   const makeTitleText = (data) => {
@@ -657,17 +675,29 @@ window.onload = () => {
     const grid = document.getElementById('grid');
     if (!grid) return;
 
-    const hexes = Array.from(grid.querySelectorAll('.hexagon'));
+    // Skip hexes that are hidden on screen (the filler cells in the last row);
+    // otherwise they get drawn as an extra row of default tiles.
+    const hexes = Array.from(grid.querySelectorAll('.hexagon')).filter(
+      (hex) => hex.style.visibility !== 'hidden'
+    );
     if (!hexes.length) return;
 
     
     const gridRect = grid.getBoundingClientRect();
 
-    
+    // Size the canvas to the visible hexes only, not the whole grid box.
+    let maxRight = 0;
+    let maxBottom = 0;
+    for (const hex of hexes) {
+      const r = hex.getBoundingClientRect();
+      maxRight = Math.max(maxRight, r.right - gridRect.left);
+      maxBottom = Math.max(maxBottom, r.bottom - gridRect.top);
+    }
+
     const padding = 20;
     const canvas = document.createElement('canvas');
-    canvas.width = Math.ceil(grid.scrollWidth + padding * 2);
-    canvas.height = Math.ceil(grid.scrollHeight + padding * 2);
+    canvas.width = Math.ceil(maxRight + padding * 2);
+    canvas.height = Math.ceil(maxBottom + padding * 2);
 
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
