@@ -285,7 +285,7 @@ const TILES = {
         src: './img/standard/halloween/Withered_Meadow.png',
         buildable: true,
         passable: true,
-        cost: 25,
+        cost: 22,
         points: 1,
         defense_modifier: 0.8,
         attack_modifier: 1.0
@@ -303,7 +303,7 @@ const TILES = {
         src: './img/standard/halloween/Forest_of_Despair.png',
         buildable: true,
         passable: true,
-        cost: 45,
+        cost: 40,
         points: 1,
         defense_modifier: 1.2,
         attack_modifier: 0.8
@@ -314,7 +314,7 @@ const TILES = {
         src: './img/standard/halloween/Swamp_of_Terror.png',
         buildable: true,
         passable: true,
-        cost: 63,
+        cost: 55,
         points: 1,
         defense_modifier: 1.0,
         attack_modifier: 1.0
@@ -334,7 +334,7 @@ const TILES = {
         src: './img/standard/winter/Icy_Meadows.png',
         buildable: true,
         passable: true,
-        cost: 25,
+        cost: 22,
         points: 1,
         defense_modifier: 0.8,
         attack_modifier: 1.0
@@ -345,7 +345,7 @@ const TILES = {
         src: './img/standard/winter/Snowball_Hills.png',
         buildable: true,
         passable: true,
-        cost: 33,
+        cost: 29,
         points: 1,
         defense_modifier: 1.1,
         attack_modifier: 0.9
@@ -374,7 +374,7 @@ const TILES = {
         src: './img/standard/winter/Fir_Forest.png',
         buildable: true,
         passable: true,
-        cost: 36,
+        cost: 40,
         points: 1,
         defense_modifier: 1.2,
         attack_modifier: 0.8
@@ -385,7 +385,7 @@ const TILES = {
         src: './img/standard/winter/Frozen_Swamp.png',
         buildable: true,
         passable: true,
-        cost: 63,
+        cost: 55,
         points: 1,
         defense_modifier: 1.0,
         attack_modifier: 1.0
@@ -407,7 +407,7 @@ const TILES = {
         src: './img/special/grass/Enchanted_Windmill.png',
         buildable: false,
         passable: true,
-        cost: 20,
+        cost: 22,
         points: 5,
         defense_modifier: 0.8,
         attack_modifier: 1.0
@@ -418,7 +418,7 @@ const TILES = {
         src: './img/special/grass/Boneyard.png',
         buildable: false,
         passable: true,
-        cost: 20,
+        cost: 22,
         points: 5,
         defense_modifier: 0.8,
         attack_modifier: 1.0
@@ -430,7 +430,7 @@ const TILES = {
         buildable: false,
         passable: true,
         cost: 45,
-        points: 35,
+        points: 25,
         defense_modifier: 1.3,
         attack_modifier: 0.7
       }),
